@@ -1,0 +1,2 @@
+class PropertyImagesController < ApplicationController
+end
