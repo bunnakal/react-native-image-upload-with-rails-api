@@ -1,9 +1,7 @@
 import React from 'react-native';
 import App from './App';
-import Result from './Result';
 
 var {
-  Navigator,
   View,
   Text,
   StyleSheet,

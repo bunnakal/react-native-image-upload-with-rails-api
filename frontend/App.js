@@ -52,8 +52,7 @@ export default class App extends React.Component {
         //const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
         var source;
         if (Platform.OS === 'android') {
-          // source = {uri: response.uri, isStatic: true};
-          source = {uri: 'data:image/jpg;base64,' + response.data, isStatic: true};
+          source = {uri: response.uri, isStatic: true};
         } else {
           source = {uri: response.uri.replace('file://', ''), isStatic: true};
         }
@@ -63,29 +62,10 @@ export default class App extends React.Component {
       }
     });
   }
-
   render() {
     var _scrollView: ScrollView;
     return (
-      <Navigator
-          initialRoute={{id: 'MainPage', name: 'Index'}}
-          renderScene={this.renderScene.bind(this)}
-          configureScene={(route) => {
-            if (route.sceneConfig) {
-              return route.sceneConfig;
-            }
-            return Navigator.SceneConfigs.FloatFromRight;
-          }} />
-    );
-  }
-
-  renderScene(route, navigator) {
-    var routeId = route.id;
-    var result = [];
-    var _scrollView: ScrollView;
-    if (routeId === 'MainPage') {
-      return (
-        <View style={styles.wraper}>
+      <View style={styles.wraper}>
         <ToolbarAndroid
           navIcon={require("./assets/ic_logo.png")}
           title=" Image Uploader"
@@ -94,7 +74,8 @@ export default class App extends React.Component {
           actions = {[
             {title: 'Synce',icon: require('./assets/ic_sync.png'), show: 'always',showWithText: true}
           ]}
-          style={styles.toolbar} />
+          style={styles.toolbar}
+          />
         <ScrollView
           ref={(scrollView) => { _scrollView = scrollView; }}
           automaticallyAdjustContentInsets={false}
@@ -106,23 +87,27 @@ export default class App extends React.Component {
           <TextInput
             style={styles.textinput}
             onChangeText={(title) => this.setState({title})}
-            value={this.state.title} />
+            value={this.state.title}
+          />
           <Text style={styles.text_title}>Description :</Text>
           <TextInput
             ref='city'
             style={styles.textinput}
             onChangeText={(description) => this.setState({description})}
-            value={this.state.description} />
+            value={this.state.description}
+          />
           <Text style={styles.text_title}>Latitude :</Text>
           <TextInput
             style={styles.textinput}
             onChangeText={(latitude) => this.setState({latitude})}
-            value={this.state.latitude} />
+            value={this.state.latitude}
+          />
           <Text style={styles.text_title}>Longitude :</Text>
           <TextInput
             style={styles.textinput}
             onChangeText={(longitude) => this.setState({longitude})}
-            value={this.state.longitude} />
+            value={this.state.longitude}
+          />
         </View>
 
         <View style={styles.button_wrapper}>
@@ -154,78 +139,50 @@ export default class App extends React.Component {
         </ScrollView>
       </View>
       )
-    }
-    if (routeId === 'Result') {
-      return (
-        <View style={styles.wraper}>
-          <ToolbarAndroid
-            navIcon={require("./assets/ic_logo.png")}
-            title=" Image Uploader"
-            titleColor="white"
-            onActionSelected={this.onActionSelected}
-            actions = {[
-              {title: 'Synce',icon: require('./assets/ic_sync.png'), show: 'always',showWithText: true}
-            ]}
-            style={styles.toolbar} />
-            <Text>welcome {this.state.city}</Text>
-        </View>
-      )
-    }
-    return this.noRoute(navigator);
   }
 
   gotoResultPage(){
 
-    // let xhr = new XMLHttpRequest();
-    // xhr.open('POST', 'http://192.168.1.126:3000/properties/create');
-    // xhr.setRequestHeader('content-type', 'multipart/form-data');
-    // let formdata = new FormData();
-    // this.state.imageSource.map(function(imageselected,key){
-    //   formdata.append('property', {uri: imageselected.uri, name: new Date().getTime() + '.jpg', type: 'multipart/form-data'});
-    // });
-    // formdata.append('title', String(this.state.title));
-    // formdata.append('description', String(this.state.description));
-    // formdata.append('latitude', String(this.state.latitude));
-    // formdata.append('longitude', String(this.state.longitude));
-    // xhr.send(formdata);
-    // console.log(xhr);
-    // console.log(this.state.title);
-
     var API_URL = 'http://192.168.1.126:3000/properties/create';
 
-    // let formData = new FormData();
-    // this.state.imageSource.map(function(image,key){
-    //   formData.append('property_image', {uri: image.uri});
-    //   console.log(image.uri);
-    // });
-
-    // formData.append('title', String(this.state.title));
-    // formData.append('description', String(this.state.description));
-    // formData.append('latitude', String(this.state.latitude));
-    // formData.append('longitude', String(this.state.longitude));
-
-    var data={
-      'property':{
-        'property_image': this.state.imageSource,
-        'title': this.state.title,
-        'description': this.state.description,
-        'latitude': this.state.latitude,
-        'longitude': this.state.longitude
-      }
-    }
-
-    console.log("uploading image");
+    //upload by using fetch
+    let formdata = new FormData();
+    formdata.append("property[title]", String(this.state.title));
+    formdata.append("property[description]", String(this.state.description));
+    formdata.append("property[latitude]", String(this.state.latitude));
+    formdata.append("property[longitude]", String(this.state.longitude));
+    this.state.imageSource.map(function(imageselected,key){
+      formdata.append("property[property_images_attributes[" + key +"][image]]", {uri: imageselected.uri, name: new Date().getTime() + '.jpg', type: 'multipart/form-data'});
+    });
 
     fetch(API_URL, {
       method: 'post',
-      body: data
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      body: formdata
     }).then(response => {
-      console.log("image uploaded");
-      console.log(response);
-    }).catch(console.log);
+      console.log("image uploaded")
+      console.log(response)
+    }).catch(err => {
+      console.log(err)
+    });
 
+    ////upload by using XMLHttpRequest
+    // let xhr = new XMLHttpRequest();
+    // xhr.open('POST', API_URL);
+    // xhr.setRequestHeader('content-type', 'multipart/form-data');
+    // let formdata = new FormData();
+    // formdata.append("property[title]", String(this.state.location));
+    // formdata.append("property[description]", String(this.state.city));
+    // formdata.append("property[latitude]", String(this.state.email));
+    // formdata.append("property[longitude]", String(this.state.tel));
+    // this.state.imageSource.map(function(imageselected,key){
+    //   formdata.append("property[property_images_attributes["+key+"][image]]", {uri: imageselected.uri, name: 'image.jpg', type: 'multipart/form-data'});
+    // });
+    // xhr.send(formdata);
+    // console.log(xhr);
   }
-
 }
 
 const styles = StyleSheet.create({
